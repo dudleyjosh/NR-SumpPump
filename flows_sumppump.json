@@ -1,1 +1,1091 @@
-[{"id":"e2eb2a9c.5857f8","type":"tab","label":"Restart Node-RED","disabled":false,"info":""},{"id":"443e30c2.ddc3e","type":"tab","label":"N.A.G.","disabled":false,"info":"Necessary Announcement Generator"},{"id":"f2daf790.dacf68","type":"tab","label":"Stop Light","disabled":false,"info":""},{"id":"a4501041.609b8","type":"tab","label":"Text-To-Speech","disabled":false,"info":""},{"id":"de7ffd29.eaa71","type":"twilio-api","z":"","name":"","sid":"AC81162e78733116ba62967cfc0b31b97d","from":"+16143471743"},{"id":"5c5176c.2a6f588","type":"inject","z":"443e30c2.ddc3e","name":"","repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","payload":"test message","payloadType":"str","x":130,"y":200,"wires":[["a80fd8ea.ec8df8"]]},{"id":"5b03df55.f0a6f","type":"rpi-gpio in","z":"443e30c2.ddc3e","name":"","pin":"32","intype":"down","debounce":"25","read":true,"x":110,"y":140,"wires":[["d112daac.acfbd8"]]},{"id":"dc2e4105.f51e5","type":"debug","z":"443e30c2.ddc3e","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":1010,"y":80,"wires":[]},{"id":"d112daac.acfbd8","type":"function","z":"443e30c2.ddc3e","name":"msg properties","func":"if (msg.payload === 1) {\n    \n    msg.payload = \"The basement is flooding\";\n    //msg.url = `http://192.168.55.104:1880/speak/${msg.payload}`;\n    //msg.url = `http://localhost:1880/speak/${msg.payload}`;\n    \n    return [msg, msg];\n    \n} else {\n    return [msg, null];\n}","outputs":2,"noerr":0,"initialize":"","finalize":"","x":300,"y":140,"wires":[["db0b67ac.94e9e8","32daadfb.185c42"],["a80fd8ea.ec8df8"]]},{"id":"db0b67ac.94e9e8","type":"trigger","z":"443e30c2.ddc3e","name":"","op1":"The basement is flooding","op2":"0","op1type":"str","op2type":"str","duration":"-10","extend":false,"units":"s","reset":"0","bytopic":"all","outputs":1,"x":510,"y":80,"wires":[["ce8df68.b9bb308"]]},{"id":"f4636580.59e488","type":"twilio out","z":"443e30c2.ddc3e","twilio":"de7ffd29.eaa71","twilioType":"sms","url":"","number":"+16143025674","name":"","x":670,"y":200,"wires":[]},{"id":"a48b8b3e.0367f8","type":"comment","z":"a4501041.609b8","name":"Symlink -> stdout & USB Souncard Setup","info":"https://www.raspberrypi.org/forums/viewtopic.php?t=220494\n\nPackage libttspico-utils is not available, but is referred to by another package.\nThis may mean that the package is missing, has been obsoleted, or\nis only available from another source\nE: Package 'libttspico-utils' has no installation candidate\n\n$ wget -q https://ftp-master.debian.org/keys/release-10.asc -O- | sudo apt-key add -\n$ echo \"deb http://deb.debian.org/debian buster non-free\" | sudo tee -a /etc/apt/sources.list\n$ sudo apt update\n$ sudo apt install libttspico-utils\n\n==========================================================\n\nhttps://elinux.org/RPi_Text_to_Speech_(Speech_Synthesis)\n\n$ sudo apt install libttspico-utils\n$ sudo apt install espeak\n\nNotes: Check this URL if pico2wave has 'Illegal Operation' error\nmanually install older libttspico-utils\n\nhttps://bugs.launchpad.net/raspbian/+bug/1835974\n\n$ wget http://archive.raspberrypi.org/debian/pool/main/s/svox/libttspico-utils_1.0+git20130326-3+rpi1_armhf.deb\n\n$ wget http://archive.raspberrypi.org/debian/pool/main/s/svox/libttspico0_1.0+git20130326-3+rpi1_armhf.deb\n\n$ sudo apt install -f ./libttspico0_1.0+git20130326-3+rpi1_armhf.deb ./libttspico-utils_1.0+git20130326-3+rpi1_armhf.deb\n\n$ sudo apt-mark hold libttspico-utils\n\n$ sudo apt-mark hold libttspico0\n\n==========================================================\n\nhttps://unix.stackexchange.com/questions/325019/pipe-output-from-program-which-only-outputs-to-a-file/325020#325020\n\nBecause pico2wave checks the file extension, a possible solution is to symlink /dev/stdout \nto a path with the appropriate extension, ideally somewhere such as /var/local/.\n\nThis does create an extra file, but not per process:\n\n$ ln -s /dev/stdout /var/local/pico2wave.wav\n$ pico2wave -w /var/local/pico2wave.wav \"test\" | aplay\n\n==========================================================\n\nhttps://cweiske.de/tagebuch/raspberry-pi1-usb-sound.htm\nhttps://alsa-project.org/main/index.php/Asoundrc\n\nUSB Soundcard Settings ($ sudo nano ~/.asoundrc):\n\npcm.!default {\n    type plug\n    slave {\n        pcm \"hw:1,0\"\n    }\n}\nctl.!default {\n    type hw\n    card 1\n}\n\n==========================================================\n\nhttp://raspberrypi-aa.github.io/session3/audio.html\n\n$ sudo amixer controls\n\n$ sudo amixer cget numid=1\n\n$ sudo amixer cset numid=1 100%\n\nThe current value of the control can be retrieved with the 'sudo amixer cget numid=' command.\n\nTo change the volume, run 'sudo amixer cset numid=1 70%'. This will set the volume to 70%. \nYou can also use a decibel value to set the volume.\n\nTo adjust volume with controls use:\n\n$ alsamixer","x":200,"y":60,"wires":[]},{"id":"2239a846.a22d48","type":"inject","z":"a4501041.609b8","name":"","repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","payload":"","payloadType":"date","x":120,"y":180,"wires":[["8bbae43c.c2d358"]]},{"id":"70e495ed.3d06ec","type":"change","z":"a4501041.609b8","name":"Init Config","rules":[{"t":"set","p":"hostname","pt":"flow","to":"payload.hostname","tot":"msg"},{"t":"set","p":"isSpeaking","pt":"flow","to":"false","tot":"bool"},{"t":"set","p":"ttsEngine","pt":"flow","to":"pico_tts","tot":"str"},{"t":"set","p":"ttsQueue","pt":"flow","to":"[]","tot":"json"}],"action":"","property":"","from":"","to":"","reg":false,"x":450,"y":180,"wires":[["c93c9ef1.f09ad"]],"info":"flow.ttsEngine options:\n - \"pico_tts\"\n - \"espeak\""},{"id":"46de3628.bf67a8","type":"change","z":"a4501041.609b8","name":"isSpeaking = false","rules":[{"t":"set","p":"isSpeaking","pt":"flow","to":"false","tot":"bool"}],"action":"","property":"","from":"","to":"","reg":false,"x":330,"y":460,"wires":[["cc3f3c52.7e08a"]]},{"id":"a3c45b2c.5a0368","type":"function","z":"a4501041.609b8","name":"Queue for TTS","func":"if (!msg.payload) {\n    msg = null;\n} else {\n    var ttsQueue = flow.get('ttsQueue');\n    ttsQueue.push(msg.payload);\n    flow.set('ttsQueue', ttsQueue);\n}\n\nif (flow.get('isSpeaking')) {\n    return [null, msg];\n} else {\n    return [msg, msg]\n}\n\n//return msg;","outputs":2,"noerr":0,"x":520,"y":320,"wires":[["d798ed54.bf84b"],["bc98f1c7.5d975"]]},{"id":"cc3f3c52.7e08a","type":"function","z":"a4501041.609b8","name":"Next in Queue","func":"// Remove first message element from ttsQueue array\nvar ttsQueue = flow.get('ttsQueue');\nttsQueue.shift();\nflow.set('ttsQueue', ttsQueue);\n\n// Check if there is a queued message\nif (!ttsQueue.length) msg = null;\n\nreturn msg;","outputs":1,"noerr":0,"x":540,"y":460,"wires":[["18ac1aef.95e895"]]},{"id":"18ac1aef.95e895","type":"link out","z":"a4501041.609b8","name":"Next in Queue OUT","links":["b8001ad9.6eac38"],"x":675,"y":460,"wires":[]},{"id":"b8001ad9.6eac38","type":"link in","z":"a4501041.609b8","name":"Next in Queue IN","links":["18ac1aef.95e895","d798ed54.bf84b","204c3816.6bfe18"],"x":835,"y":320,"wires":[["ac6fcbde.26b0f8","f4999543.504878"]]},{"id":"e715dc8f.8c03a","type":"http in","z":"a4501041.609b8","name":"","url":"/speak/:text","method":"get","upload":false,"swaggerDoc":"","x":120,"y":300,"wires":[["5d9f6573.34fb3c"]]},{"id":"bc98f1c7.5d975","type":"http response","z":"a4501041.609b8","name":"","statusCode":"","headers":{},"x":690,"y":340,"wires":[]},{"id":"5fa52208.f0a02c","type":"catch","z":"a4501041.609b8","name":"","scope":null,"uncaught":false,"x":440,"y":60,"wires":[["6b32ed10.b36bb4"]]},{"id":"6b32ed10.b36bb4","type":"debug","z":"a4501041.609b8","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":590,"y":60,"wires":[]},{"id":"93c3374f.1600c8","type":"http in","z":"a4501041.609b8","name":"","url":"/speak","method":"post","upload":false,"swaggerDoc":"","x":110,"y":340,"wires":[["77156d20.5280c4"]]},{"id":"77156d20.5280c4","type":"change","z":"a4501041.609b8","name":"","rules":[{"t":"set","p":"payload","pt":"msg","to":"payload.text","tot":"msg"}],"action":"","property":"","from":"","to":"","reg":false,"x":320,"y":340,"wires":[["a3c45b2c.5a0368"]]},{"id":"5d9f6573.34fb3c","type":"change","z":"a4501041.609b8","name":"","rules":[{"t":"set","p":"payload","pt":"msg","to":"req.params.text","tot":"msg"}],"action":"","property":"","from":"","to":"","reg":false,"x":320,"y":300,"wires":[["a3c45b2c.5a0368"]]},{"id":"204c3816.6bfe18","type":"link out","z":"a4501041.609b8","name":"","links":["b8001ad9.6eac38"],"x":775,"y":180,"wires":[]},{"id":"d798ed54.bf84b","type":"link out","z":"a4501041.609b8","name":"","links":["b8001ad9.6eac38"],"x":655,"y":300,"wires":[]},{"id":"44c63f66.e05db","type":"comment","z":"a4501041.609b8","name":"Init Config","info":"","x":100,"y":140,"wires":[]},{"id":"afc72079.83b0c","type":"comment","z":"a4501041.609b8","name":"http API","info":"","x":100,"y":260,"wires":[]},{"id":"3a5ac9a3.7ceb56","type":"comment","z":"a4501041.609b8","name":"Loop Through Queue","info":"","x":140,"y":420,"wires":[]},{"id":"8bbae43c.c2d358","type":"OS","z":"a4501041.609b8","name":"","x":290,"y":180,"wires":[["70e495ed.3d06ec"]]},{"id":"c93c9ef1.f09ad","type":"function","z":"a4501041.609b8","name":"Queue Init Msg","func":"var initMsg = `Hello, ${flow.get('hostname')} is now online!`;\nvar ttsQueue = flow.get('ttsQueue');\nttsQueue.push(initMsg);\nflow.set('ttsQueue', ttsQueue);\n\nreturn msg;","outputs":1,"noerr":0,"x":640,"y":180,"wires":[["204c3816.6bfe18"]]},{"id":"ac6fcbde.26b0f8","type":"change","z":"a4501041.609b8","name":"isSpeaking = true","rules":[{"t":"set","p":"isSpeaking","pt":"flow","to":"true","tot":"bool"}],"action":"","property":"","from":"","to":"","reg":false,"x":970,"y":320,"wires":[["39dc0eb9.e4f612"]]},{"id":"39dc0eb9.e4f612","type":"function","z":"a4501041.609b8","name":"TTS Text","func":"var tts = flow.get('ttsQueue')[0];\n\nswitch(flow.get('ttsEngine')) {\n  case 'espeak':\n    msg.payload = `espeak -ven+f2 -a120 -p50 -s120 -k10 \"${tts}\"`;\n    break;\n  case 'pico_tts':\n    msg.payload = `pico2wave -l en-US -w /var/local/pico2wave.wav \"${tts}\" | aplay`;\n    break;\n  default:\n    msg.payload = `pico2wave -w /var/local/pico2wave.wav \"${tts}\" | aplay`;\n}\n\nreturn msg;","outputs":1,"noerr":0,"x":1160,"y":320,"wires":[["73749bce.1ab454"]]},{"id":"73749bce.1ab454","type":"exec","z":"a4501041.609b8","command":"","addpay":true,"append":"","useSpawn":"false","timer":"","oldrc":false,"name":"Speak","x":1310,"y":320,"wires":[["de55512a.1d6cd"],["4e7413c7.5caaec"],["1b4fdd17.c26013"]]},{"id":"de55512a.1d6cd","type":"debug","z":"a4501041.609b8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":1450,"y":280,"wires":[]},{"id":"4e7413c7.5caaec","type":"debug","z":"a4501041.609b8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":1450,"y":320,"wires":[]},{"id":"1b4fdd17.c26013","type":"debug","z":"a4501041.609b8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":1450,"y":360,"wires":[]},{"id":"f4999543.504878","type":"debug","z":"a4501041.609b8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":930,"y":360,"wires":[]},{"id":"776c4b31.fd7d14","type":"debug","z":"a4501041.609b8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":290,"y":500,"wires":[]},{"id":"83893601.75c9e8","type":"complete","z":"a4501041.609b8","name":"Speak Complete","scope":["73749bce.1ab454"],"uncaught":false,"x":120,"y":460,"wires":[["46de3628.bf67a8","776c4b31.fd7d14"]]},{"id":"3495a2bd.e6b28e","type":"inject","z":"e2eb2a9c.5857f8","name":"","repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","payload":"","payloadType":"date","x":140,"y":100,"wires":[["802ef000.6048f"]]},{"id":"802ef000.6048f","type":"exec","z":"e2eb2a9c.5857f8","command":"node-red-restart","addpay":false,"append":"","useSpawn":"false","timer":"","oldrc":false,"name":"","x":320,"y":100,"wires":[["ce989af4.7882f8"],["ce989af4.7882f8"],["ce989af4.7882f8"]]},{"id":"ce989af4.7882f8","type":"debug","z":"e2eb2a9c.5857f8","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":510,"y":100,"wires":[]},{"id":"41834cf9.bb8eb4","type":"http request","z":"443e30c2.ddc3e","d":true,"name":"","method":"GET","ret":"txt","paytoqs":"ignore","url":"","tls":"","persist":false,"proxy":"","authType":"","x":850,"y":80,"wires":[["dc2e4105.f51e5"]]},{"id":"a9f69e1d.4cf8a","type":"debug","z":"443e30c2.ddc3e","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":670,"y":240,"wires":[]},{"id":"ce8df68.b9bb308","type":"switch","z":"443e30c2.ddc3e","name":"","property":"payload","propertyType":"msg","rules":[{"t":"neq","v":"0","vt":"num"}],"checkall":"true","repair":false,"outputs":1,"x":690,"y":80,"wires":[["41834cf9.bb8eb4","efd9c55a.54fd48"]]},{"id":"32daadfb.185c42","type":"debug","z":"443e30c2.ddc3e","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":470,"y":40,"wires":[]},{"id":"a80fd8ea.ec8df8","type":"delay","z":"443e30c2.ddc3e","name":"","pauseType":"rate","timeout":"5","timeoutUnits":"seconds","rate":"1","nbRateUnits":"1","rateUnits":"minute","randomFirst":"1","randomLast":"5","randomUnits":"seconds","drop":true,"x":490,"y":200,"wires":[["f4636580.59e488","a9f69e1d.4cf8a"]]},{"id":"add71562.0ec528","type":"change","z":"f2daf790.dacf68","name":"Set YELLOW","rules":[{"t":"set","p":"state","pt":"flow","to":"YELLOW","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":440,"y":220,"wires":[["26c53604.7573fa"]]},{"id":"e229d8d9.7606d8","type":"change","z":"f2daf790.dacf68","name":"Set GREEN","rules":[{"t":"set","p":"state","pt":"flow","to":"GREEN","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":430,"y":280,"wires":[["26c53604.7573fa"]]},{"id":"229a18db.a74b28","type":"rpi-gpio out","z":"f2daf790.dacf68","name":"","pin":"38","set":true,"level":"0","freq":"","out":"out","x":820,"y":180,"wires":[]},{"id":"44699d0a.701114","type":"rpi-gpio out","z":"f2daf790.dacf68","name":"","pin":"40","set":true,"level":"0","freq":"","out":"out","x":820,"y":120,"wires":[]},{"id":"6362a40b.bec2bc","type":"rpi-gpio out","z":"f2daf790.dacf68","name":"","pin":"36","set":true,"level":"0","freq":"","out":"out","x":820,"y":240,"wires":[]},{"id":"26c53604.7573fa","type":"function","z":"f2daf790.dacf68","name":"","func":"const state = flow.get(\"state\");\n\nlet output = [];\n\nswitch(state) {\n    case \"RED\":\n        output = [\n            {payload: 1},\n            {payload: 0},\n            {payload: 0}\n        ];\n        break;\n    case \"YELLOW\":\n        output = [\n            {payload: 0},\n            {payload: 1},\n            {payload: 0}\n        ];\n        break;\n    case \"GREEN\":\n        output = [\n            {payload: 0},\n            {payload: 0},\n            {payload: 1}\n        ];\n        break;\n    case \"OFF\":\n        output = [\n            {payload: 0},\n            {payload: 0},\n            {payload: 0}\n        ];\n        break;\n    default:\n        output = [\n            {payload: 0},\n            {payload: 0},\n            {payload: 0}\n        ];\n}\n\nreturn output;","outputs":3,"noerr":0,"x":630,"y":180,"wires":[["44699d0a.701114"],["229a18db.a74b28"],["6362a40b.bec2bc"]],"icon":"node-red/light.svg"},{"id":"9c9ca220.7956f","type":"rpi-gpio in","z":"f2daf790.dacf68","name":"","pin":"32","intype":"down","debounce":"25","read":true,"x":120,"y":160,"wires":[["ee0623d.628b4e"]]},{"id":"ee0623d.628b4e","type":"switch","z":"f2daf790.dacf68","name":"","property":"payload","propertyType":"msg","rules":[{"t":"eq","v":"0","vt":"num"},{"t":"eq","v":"1","vt":"num"}],"checkall":"true","repair":false,"outputs":2,"x":270,"y":160,"wires":[["7fc66418.3d622c"],["6afa5f42.6c8a7"]]},{"id":"6afa5f42.6c8a7","type":"change","z":"f2daf790.dacf68","name":"Set RED","rules":[{"t":"set","p":"state","pt":"flow","to":"YELLOW","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":420,"y":160,"wires":[["26c53604.7573fa"]]},{"id":"7fc66418.3d622c","type":"change","z":"f2daf790.dacf68","name":"Set OFF","rules":[{"t":"set","p":"state","pt":"flow","to":"OFF","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":420,"y":100,"wires":[["26c53604.7573fa"]]},{"id":"efd9c55a.54fd48","type":"debug","z":"443e30c2.ddc3e","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","targetType":"full","x":830,"y":40,"wires":[]}]
+[
+    {
+        "id": "e2eb2a9c.5857f8",
+        "type": "tab",
+        "label": "Restart Node-RED",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "443e30c2.ddc3e",
+        "type": "tab",
+        "label": "N.A.G.",
+        "disabled": false,
+        "info": "Necessary Announcement Generator"
+    },
+    {
+        "id": "f2daf790.dacf68",
+        "type": "tab",
+        "label": "Stop Light",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "a4501041.609b8",
+        "type": "tab",
+        "label": "Text-To-Speech",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "de7ffd29.eaa71",
+        "type": "twilio-api",
+        "name": "",
+        "sid": "AC81162e78733116ba62967cfc0b31b97d",
+        "from": "+16143471743"
+    },
+    {
+        "id": "5c5176c.2a6f588",
+        "type": "inject",
+        "z": "443e30c2.ddc3e",
+        "name": "",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "test message",
+        "payloadType": "str",
+        "x": 130,
+        "y": 200,
+        "wires": [
+            [
+                "a80fd8ea.ec8df8"
+            ]
+        ]
+    },
+    {
+        "id": "5b03df55.f0a6f",
+        "type": "rpi-gpio in",
+        "z": "443e30c2.ddc3e",
+        "name": "",
+        "pin": "32",
+        "intype": "down",
+        "debounce": "25",
+        "read": true,
+        "x": 110,
+        "y": 140,
+        "wires": [
+            [
+                "d112daac.acfbd8"
+            ]
+        ]
+    },
+    {
+        "id": "dc2e4105.f51e5",
+        "type": "debug",
+        "z": "443e30c2.ddc3e",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 1010,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "d112daac.acfbd8",
+        "type": "function",
+        "z": "443e30c2.ddc3e",
+        "name": "msg properties",
+        "func": "if (msg.payload === 1) {\n    \n    msg.payload = \"The basement is flooding\";\n    //msg.url = `http://192.168.55.104:1880/speak/${msg.payload}`;\n    //msg.url = `http://localhost:1880/speak/${msg.payload}`;\n    \n    return [msg, msg];\n    \n} else {\n    return [msg, null];\n}",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 300,
+        "y": 140,
+        "wires": [
+            [
+                "db0b67ac.94e9e8",
+                "32daadfb.185c42"
+            ],
+            [
+                "a80fd8ea.ec8df8"
+            ]
+        ]
+    },
+    {
+        "id": "db0b67ac.94e9e8",
+        "type": "trigger",
+        "z": "443e30c2.ddc3e",
+        "name": "",
+        "op1": "The basement is flooding",
+        "op2": "0",
+        "op1type": "str",
+        "op2type": "str",
+        "duration": "-10",
+        "extend": false,
+        "units": "s",
+        "reset": "0",
+        "bytopic": "all",
+        "outputs": 1,
+        "x": 510,
+        "y": 80,
+        "wires": [
+            [
+                "ce8df68.b9bb308"
+            ]
+        ]
+    },
+    {
+        "id": "f4636580.59e488",
+        "type": "twilio out",
+        "z": "443e30c2.ddc3e",
+        "twilio": "de7ffd29.eaa71",
+        "twilioType": "sms",
+        "url": "",
+        "number": "+16143025674",
+        "name": "",
+        "x": 670,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "a48b8b3e.0367f8",
+        "type": "comment",
+        "z": "a4501041.609b8",
+        "name": "Symlink -> stdout & USB Souncard Setup",
+        "info": "https://www.raspberrypi.org/forums/viewtopic.php?t=220494\n\nPackage libttspico-utils is not available, but is referred to by another package.\nThis may mean that the package is missing, has been obsoleted, or\nis only available from another source\nE: Package 'libttspico-utils' has no installation candidate\n\n$ wget -q https://ftp-master.debian.org/keys/release-10.asc -O- | sudo apt-key add -\n$ echo \"deb http://deb.debian.org/debian buster non-free\" | sudo tee -a /etc/apt/sources.list\n$ sudo apt update\n$ sudo apt install libttspico-utils\n\n==========================================================\n\nhttps://elinux.org/RPi_Text_to_Speech_(Speech_Synthesis)\n\n$ sudo apt install libttspico-utils\n$ sudo apt install espeak\n\nNotes: Check this URL if pico2wave has 'Illegal Operation' error\nmanually install older libttspico-utils\n\nhttps://bugs.launchpad.net/raspbian/+bug/1835974\n\n$ wget http://archive.raspberrypi.org/debian/pool/main/s/svox/libttspico-utils_1.0+git20130326-3+rpi1_armhf.deb\n\n$ wget http://archive.raspberrypi.org/debian/pool/main/s/svox/libttspico0_1.0+git20130326-3+rpi1_armhf.deb\n\n$ sudo apt install -f ./libttspico0_1.0+git20130326-3+rpi1_armhf.deb ./libttspico-utils_1.0+git20130326-3+rpi1_armhf.deb\n\n$ sudo apt-mark hold libttspico-utils\n\n$ sudo apt-mark hold libttspico0\n\n==========================================================\n\nhttps://unix.stackexchange.com/questions/325019/pipe-output-from-program-which-only-outputs-to-a-file/325020#325020\n\nBecause pico2wave checks the file extension, a possible solution is to symlink /dev/stdout \nto a path with the appropriate extension, ideally somewhere such as /var/local/.\n\nThis does create an extra file, but not per process:\n\n$ ln -s /dev/stdout /var/local/pico2wave.wav\n$ pico2wave -w /var/local/pico2wave.wav \"test\" | aplay\n\n==========================================================\n\nhttps://cweiske.de/tagebuch/raspberry-pi1-usb-sound.htm\nhttps://alsa-project.org/main/index.php/Asoundrc\n\nUSB Soundcard Settings ($ sudo nano ~/.asoundrc):\n\npcm.!default {\n    type plug\n    slave {\n        pcm \"hw:1,0\"\n    }\n}\nctl.!default {\n    type hw\n    card 1\n}\n\n==========================================================\n\nhttp://raspberrypi-aa.github.io/session3/audio.html\n\n$ sudo amixer controls\n\n$ sudo amixer cget numid=1\n\n$ sudo amixer cset numid=1 100%\n\nThe current value of the control can be retrieved with the 'sudo amixer cget numid=' command.\n\nTo change the volume, run 'sudo amixer cset numid=1 70%'. This will set the volume to 70%. \nYou can also use a decibel value to set the volume.\n\nTo adjust volume with controls use:\n\n$ alsamixer",
+        "x": 200,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "2239a846.a22d48",
+        "type": "inject",
+        "z": "a4501041.609b8",
+        "name": "",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 120,
+        "y": 180,
+        "wires": [
+            [
+                "8bbae43c.c2d358"
+            ]
+        ]
+    },
+    {
+        "id": "70e495ed.3d06ec",
+        "type": "change",
+        "z": "a4501041.609b8",
+        "name": "Init Config",
+        "rules": [
+            {
+                "t": "set",
+                "p": "hostname",
+                "pt": "flow",
+                "to": "payload.hostname",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "isSpeaking",
+                "pt": "flow",
+                "to": "false",
+                "tot": "bool"
+            },
+            {
+                "t": "set",
+                "p": "ttsEngine",
+                "pt": "flow",
+                "to": "pico_tts",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "ttsQueue",
+                "pt": "flow",
+                "to": "[]",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 450,
+        "y": 180,
+        "wires": [
+            [
+                "c93c9ef1.f09ad"
+            ]
+        ],
+        "info": "flow.ttsEngine options:\n - \"pico_tts\"\n - \"espeak\""
+    },
+    {
+        "id": "46de3628.bf67a8",
+        "type": "change",
+        "z": "a4501041.609b8",
+        "name": "isSpeaking = false",
+        "rules": [
+            {
+                "t": "set",
+                "p": "isSpeaking",
+                "pt": "flow",
+                "to": "false",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 330,
+        "y": 460,
+        "wires": [
+            [
+                "cc3f3c52.7e08a"
+            ]
+        ]
+    },
+    {
+        "id": "a3c45b2c.5a0368",
+        "type": "function",
+        "z": "a4501041.609b8",
+        "name": "Queue for TTS",
+        "func": "if (!msg.payload) {\n    msg = null;\n} else {\n    var ttsQueue = flow.get('ttsQueue');\n    ttsQueue.push(msg.payload);\n    flow.set('ttsQueue', ttsQueue);\n}\n\nif (flow.get('isSpeaking')) {\n    return [null, msg];\n} else {\n    return [msg, msg]\n}\n\n//return msg;",
+        "outputs": 2,
+        "noerr": 0,
+        "x": 520,
+        "y": 320,
+        "wires": [
+            [
+                "d798ed54.bf84b"
+            ],
+            [
+                "bc98f1c7.5d975"
+            ]
+        ]
+    },
+    {
+        "id": "cc3f3c52.7e08a",
+        "type": "function",
+        "z": "a4501041.609b8",
+        "name": "Next in Queue",
+        "func": "// Remove first message element from ttsQueue array\nvar ttsQueue = flow.get('ttsQueue');\nttsQueue.shift();\nflow.set('ttsQueue', ttsQueue);\n\n// Check if there is a queued message\nif (!ttsQueue.length) msg = null;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 540,
+        "y": 460,
+        "wires": [
+            [
+                "18ac1aef.95e895"
+            ]
+        ]
+    },
+    {
+        "id": "18ac1aef.95e895",
+        "type": "link out",
+        "z": "a4501041.609b8",
+        "name": "Next in Queue OUT",
+        "links": [
+            "b8001ad9.6eac38"
+        ],
+        "x": 675,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "b8001ad9.6eac38",
+        "type": "link in",
+        "z": "a4501041.609b8",
+        "name": "Next in Queue IN",
+        "links": [
+            "18ac1aef.95e895",
+            "d798ed54.bf84b",
+            "204c3816.6bfe18"
+        ],
+        "x": 835,
+        "y": 320,
+        "wires": [
+            [
+                "ac6fcbde.26b0f8",
+                "f4999543.504878"
+            ]
+        ]
+    },
+    {
+        "id": "e715dc8f.8c03a",
+        "type": "http in",
+        "z": "a4501041.609b8",
+        "name": "",
+        "url": "/speak/:text",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 300,
+        "wires": [
+            [
+                "5d9f6573.34fb3c"
+            ]
+        ]
+    },
+    {
+        "id": "bc98f1c7.5d975",
+        "type": "http response",
+        "z": "a4501041.609b8",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 690,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "5fa52208.f0a02c",
+        "type": "catch",
+        "z": "a4501041.609b8",
+        "name": "",
+        "scope": null,
+        "uncaught": false,
+        "x": 440,
+        "y": 60,
+        "wires": [
+            [
+                "6b32ed10.b36bb4"
+            ]
+        ]
+    },
+    {
+        "id": "6b32ed10.b36bb4",
+        "type": "debug",
+        "z": "a4501041.609b8",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 590,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "93c3374f.1600c8",
+        "type": "http in",
+        "z": "a4501041.609b8",
+        "name": "",
+        "url": "/speak",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 110,
+        "y": 340,
+        "wires": [
+            [
+                "77156d20.5280c4"
+            ]
+        ]
+    },
+    {
+        "id": "77156d20.5280c4",
+        "type": "change",
+        "z": "a4501041.609b8",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.text",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 320,
+        "y": 340,
+        "wires": [
+            [
+                "a3c45b2c.5a0368"
+            ]
+        ]
+    },
+    {
+        "id": "5d9f6573.34fb3c",
+        "type": "change",
+        "z": "a4501041.609b8",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "req.params.text",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 320,
+        "y": 300,
+        "wires": [
+            [
+                "a3c45b2c.5a0368"
+            ]
+        ]
+    },
+    {
+        "id": "204c3816.6bfe18",
+        "type": "link out",
+        "z": "a4501041.609b8",
+        "name": "",
+        "links": [
+            "b8001ad9.6eac38"
+        ],
+        "x": 775,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "d798ed54.bf84b",
+        "type": "link out",
+        "z": "a4501041.609b8",
+        "name": "",
+        "links": [
+            "b8001ad9.6eac38"
+        ],
+        "x": 655,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "44c63f66.e05db",
+        "type": "comment",
+        "z": "a4501041.609b8",
+        "name": "Init Config",
+        "info": "",
+        "x": 100,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "afc72079.83b0c",
+        "type": "comment",
+        "z": "a4501041.609b8",
+        "name": "http API",
+        "info": "",
+        "x": 100,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "3a5ac9a3.7ceb56",
+        "type": "comment",
+        "z": "a4501041.609b8",
+        "name": "Loop Through Queue",
+        "info": "",
+        "x": 140,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "8bbae43c.c2d358",
+        "type": "OS",
+        "z": "a4501041.609b8",
+        "name": "",
+        "x": 290,
+        "y": 180,
+        "wires": [
+            [
+                "70e495ed.3d06ec"
+            ]
+        ]
+    },
+    {
+        "id": "c93c9ef1.f09ad",
+        "type": "function",
+        "z": "a4501041.609b8",
+        "name": "Queue Init Msg",
+        "func": "var initMsg = `Hello, ${flow.get('hostname')} is now online!`;\nvar ttsQueue = flow.get('ttsQueue');\nttsQueue.push(initMsg);\nflow.set('ttsQueue', ttsQueue);\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 640,
+        "y": 180,
+        "wires": [
+            [
+                "204c3816.6bfe18"
+            ]
+        ]
+    },
+    {
+        "id": "ac6fcbde.26b0f8",
+        "type": "change",
+        "z": "a4501041.609b8",
+        "name": "isSpeaking = true",
+        "rules": [
+            {
+                "t": "set",
+                "p": "isSpeaking",
+                "pt": "flow",
+                "to": "true",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 970,
+        "y": 320,
+        "wires": [
+            [
+                "39dc0eb9.e4f612"
+            ]
+        ]
+    },
+    {
+        "id": "39dc0eb9.e4f612",
+        "type": "function",
+        "z": "a4501041.609b8",
+        "name": "TTS Text",
+        "func": "var tts = flow.get('ttsQueue')[0];\n\nswitch(flow.get('ttsEngine')) {\n  case 'espeak':\n    msg.payload = `espeak -ven+f2 -a120 -p50 -s120 -k10 \"${tts}\"`;\n    break;\n  case 'pico_tts':\n    msg.payload = `pico2wave -l en-US -w /var/local/pico2wave.wav \"${tts}\" | aplay`;\n    break;\n  default:\n    msg.payload = `pico2wave -w /var/local/pico2wave.wav \"${tts}\" | aplay`;\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1160,
+        "y": 320,
+        "wires": [
+            [
+                "73749bce.1ab454"
+            ]
+        ]
+    },
+    {
+        "id": "73749bce.1ab454",
+        "type": "exec",
+        "z": "a4501041.609b8",
+        "command": "",
+        "addpay": true,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "oldrc": false,
+        "name": "Speak",
+        "x": 1310,
+        "y": 320,
+        "wires": [
+            [
+                "de55512a.1d6cd"
+            ],
+            [
+                "4e7413c7.5caaec"
+            ],
+            [
+                "1b4fdd17.c26013"
+            ]
+        ]
+    },
+    {
+        "id": "de55512a.1d6cd",
+        "type": "debug",
+        "z": "a4501041.609b8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 1450,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "4e7413c7.5caaec",
+        "type": "debug",
+        "z": "a4501041.609b8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 1450,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "1b4fdd17.c26013",
+        "type": "debug",
+        "z": "a4501041.609b8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 1450,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "f4999543.504878",
+        "type": "debug",
+        "z": "a4501041.609b8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 930,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "776c4b31.fd7d14",
+        "type": "debug",
+        "z": "a4501041.609b8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 290,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "83893601.75c9e8",
+        "type": "complete",
+        "z": "a4501041.609b8",
+        "name": "Speak Complete",
+        "scope": [
+            "73749bce.1ab454"
+        ],
+        "uncaught": false,
+        "x": 120,
+        "y": 460,
+        "wires": [
+            [
+                "46de3628.bf67a8",
+                "776c4b31.fd7d14"
+            ]
+        ]
+    },
+    {
+        "id": "3495a2bd.e6b28e",
+        "type": "inject",
+        "z": "e2eb2a9c.5857f8",
+        "name": "",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 100,
+        "wires": [
+            [
+                "802ef000.6048f"
+            ]
+        ]
+    },
+    {
+        "id": "802ef000.6048f",
+        "type": "exec",
+        "z": "e2eb2a9c.5857f8",
+        "command": "node-red-restart",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "oldrc": false,
+        "name": "",
+        "x": 320,
+        "y": 100,
+        "wires": [
+            [
+                "ce989af4.7882f8"
+            ],
+            [
+                "ce989af4.7882f8"
+            ],
+            [
+                "ce989af4.7882f8"
+            ]
+        ]
+    },
+    {
+        "id": "ce989af4.7882f8",
+        "type": "debug",
+        "z": "e2eb2a9c.5857f8",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 510,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "41834cf9.bb8eb4",
+        "type": "http request",
+        "z": "443e30c2.ddc3e",
+        "d": true,
+        "name": "",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "x": 850,
+        "y": 80,
+        "wires": [
+            [
+                "dc2e4105.f51e5"
+            ]
+        ]
+    },
+    {
+        "id": "a9f69e1d.4cf8a",
+        "type": "debug",
+        "z": "443e30c2.ddc3e",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 670,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "ce8df68.b9bb308",
+        "type": "switch",
+        "z": "443e30c2.ddc3e",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "neq",
+                "v": "0",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 690,
+        "y": 80,
+        "wires": [
+            [
+                "41834cf9.bb8eb4",
+                "efd9c55a.54fd48"
+            ]
+        ]
+    },
+    {
+        "id": "32daadfb.185c42",
+        "type": "debug",
+        "z": "443e30c2.ddc3e",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 470,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "a80fd8ea.ec8df8",
+        "type": "delay",
+        "z": "443e30c2.ddc3e",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "minute",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": true,
+        "x": 490,
+        "y": 200,
+        "wires": [
+            [
+                "f4636580.59e488",
+                "a9f69e1d.4cf8a"
+            ]
+        ]
+    },
+    {
+        "id": "add71562.0ec528",
+        "type": "change",
+        "z": "f2daf790.dacf68",
+        "name": "Set YELLOW",
+        "rules": [
+            {
+                "t": "set",
+                "p": "state",
+                "pt": "flow",
+                "to": "YELLOW",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 440,
+        "y": 220,
+        "wires": [
+            [
+                "26c53604.7573fa"
+            ]
+        ]
+    },
+    {
+        "id": "e229d8d9.7606d8",
+        "type": "change",
+        "z": "f2daf790.dacf68",
+        "name": "Set GREEN",
+        "rules": [
+            {
+                "t": "set",
+                "p": "state",
+                "pt": "flow",
+                "to": "GREEN",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 430,
+        "y": 280,
+        "wires": [
+            [
+                "26c53604.7573fa"
+            ]
+        ]
+    },
+    {
+        "id": "229a18db.a74b28",
+        "type": "rpi-gpio out",
+        "z": "f2daf790.dacf68",
+        "name": "",
+        "pin": "38",
+        "set": true,
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 820,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "44699d0a.701114",
+        "type": "rpi-gpio out",
+        "z": "f2daf790.dacf68",
+        "name": "",
+        "pin": "40",
+        "set": true,
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 820,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "6362a40b.bec2bc",
+        "type": "rpi-gpio out",
+        "z": "f2daf790.dacf68",
+        "name": "",
+        "pin": "36",
+        "set": true,
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 820,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "26c53604.7573fa",
+        "type": "function",
+        "z": "f2daf790.dacf68",
+        "name": "",
+        "func": "const state = flow.get(\"state\");\n\nlet output = [];\n\nswitch(state) {\n    case \"RED\":\n        output = [\n            {payload: 1},\n            {payload: 0},\n            {payload: 0}\n        ];\n        break;\n    case \"YELLOW\":\n        output = [\n            {payload: 0},\n            {payload: 1},\n            {payload: 0}\n        ];\n        break;\n    case \"GREEN\":\n        output = [\n            {payload: 0},\n            {payload: 0},\n            {payload: 1}\n        ];\n        break;\n    case \"OFF\":\n        output = [\n            {payload: 0},\n            {payload: 0},\n            {payload: 0}\n        ];\n        break;\n    default:\n        output = [\n            {payload: 0},\n            {payload: 0},\n            {payload: 0}\n        ];\n}\n\nreturn output;",
+        "outputs": 3,
+        "noerr": 0,
+        "x": 630,
+        "y": 180,
+        "wires": [
+            [
+                "44699d0a.701114"
+            ],
+            [
+                "229a18db.a74b28"
+            ],
+            [
+                "6362a40b.bec2bc"
+            ]
+        ],
+        "icon": "node-red/light.svg"
+    },
+    {
+        "id": "9c9ca220.7956f",
+        "type": "rpi-gpio in",
+        "z": "f2daf790.dacf68",
+        "name": "",
+        "pin": "32",
+        "intype": "down",
+        "debounce": "25",
+        "read": true,
+        "x": 120,
+        "y": 160,
+        "wires": [
+            [
+                "ee0623d.628b4e"
+            ]
+        ]
+    },
+    {
+        "id": "ee0623d.628b4e",
+        "type": "switch",
+        "z": "f2daf790.dacf68",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 270,
+        "y": 160,
+        "wires": [
+            [
+                "7fc66418.3d622c"
+            ],
+            [
+                "6afa5f42.6c8a7"
+            ]
+        ]
+    },
+    {
+        "id": "6afa5f42.6c8a7",
+        "type": "change",
+        "z": "f2daf790.dacf68",
+        "name": "Set RED",
+        "rules": [
+            {
+                "t": "set",
+                "p": "state",
+                "pt": "flow",
+                "to": "YELLOW",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 420,
+        "y": 160,
+        "wires": [
+            [
+                "26c53604.7573fa"
+            ]
+        ]
+    },
+    {
+        "id": "7fc66418.3d622c",
+        "type": "change",
+        "z": "f2daf790.dacf68",
+        "name": "Set OFF",
+        "rules": [
+            {
+                "t": "set",
+                "p": "state",
+                "pt": "flow",
+                "to": "OFF",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 420,
+        "y": 100,
+        "wires": [
+            [
+                "26c53604.7573fa"
+            ]
+        ]
+    },
+    {
+        "id": "efd9c55a.54fd48",
+        "type": "debug",
+        "z": "443e30c2.ddc3e",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 830,
+        "y": 40,
+        "wires": []
+    }
+]
